@@ -47,18 +47,18 @@
 
 .banner-ad {
   width: 100%;
-  max-width: 480px; /* match ad width */
-  height: 360px; /* match ad height */
-  margin: 0 auto 12px auto;
+  max-width: 480px;
+  height: 120px; /* smaller height */
+  overflow: hidden;
   display: flex;
   justify-content: center;
   align-items: center;
   border-radius: 8px;
-  overflow: hidden; /* prevent overflow */
 }
 .banner-ad iframe, .banner-ad script {
-  width: 100%;
+  width: auto;
   height: 100%;
+  max-width: none;
 }
 
   .board {
