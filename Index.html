@@ -1,0 +1,286 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Tic Tac Toe</title>
+<style>
+  :root {
+    --bg-dark: #0f0f18;
+    --panel-dark: #1b1630;
+    --text-dark: #e9e7ff;
+    --bg-light: #f8f9fb;
+    --panel-light: #ffffff;
+    --text-light: #222;
+    --accent: #8f4bff;
+    --x-color: #69b7ff;
+    --o-color: #ff6b6b;
+  }
+
+  body {
+    margin: 0;
+    font-family: "Inter", sans-serif;
+    background: var(--bg-dark);
+    color: var(--text-dark);
+    display: flex;
+    justify-content: center;
+    align-items: flex-start;
+    min-height: 100vh;
+    padding: 16px;
+    transition: all 0.3s ease;
+  }
+  body.light {
+    background: var(--bg-light);
+    color: var(--text-light);
+  }
+
+  .container {
+    width: 100%;
+    max-width: 420px;
+  }
+
+  h1 {
+    text-align: center;
+    font-size: 20px;
+    margin-bottom: 8px;
+  }
+
+  .banner-ad {
+    height: 60px;
+    background: rgba(255, 255, 255, 0.08);
+    border-radius: 8px;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    margin-bottom: 12px;
+    font-size: 13px;
+  }
+
+  .board {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 8px;
+    background: var(--panel-dark);
+    padding: 12px;
+    border-radius: 12px;
+    transition: all 0.3s ease;
+  }
+  body.light .board {
+    background: var(--panel-light);
+  }
+
+  .cell {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    aspect-ratio: 1/1;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 40px;
+    cursor: pointer;
+    transition: transform 0.2s;
+  }
+  .cell:hover {
+    transform: scale(0.97);
+  }
+
+  .x {
+    color: var(--x-color);
+    animation: pop 0.3s ease forwards;
+  }
+  .o {
+    color: var(--o-color);
+    animation: pop 0.3s ease forwards;
+  }
+
+  @keyframes pop {
+    0% { transform: scale(0); opacity: 0; }
+    50% { transform: scale(1.2); opacity: 1; }
+    100% { transform: scale(1); opacity: 1; }
+  }
+
+  .controls {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px;
+    margin-top: 12px;
+  }
+
+  button {
+    background: var(--accent);
+    border: none;
+    color: #fff;
+    padding: 10px 14px;
+    border-radius: 8px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+  button:hover {
+    opacity: 0.9;
+  }
+
+  .status {
+    text-align: center;
+    margin-top: 8px;
+    font-weight: 600;
+  }
+
+  .score {
+    text-align: center;
+    font-size: 14px;
+    margin-top: 4px;
+  }
+
+  .footer {
+    text-align: center;
+    font-size: 12px;
+    margin-top: 10px;
+    opacity: 0.7;
+  }
+</style>
+</head>
+<body>
+<div class="container">
+  <h1>Tic Tac Toe</h1>
+
+  <div class="banner-ad" id="banner-ad">
+   <script type="text/javascript" data-cfasync="false" src="//ad2earn.net.in/ads/be8fb1de.js?size=BS&adult=no"></script>
+  </div>
+
+  <div class="board" id="board"></div>
+
+  <div class="status" id="status">Player O's Turn</div>
+  <div class="score" id="score">O: 0 | X: 0 | Ties: 0</div>
+
+  <div class="controls">
+    <button id="restart">Restart</button>
+    <button id="switch-mode">Mode: vs AI 🤖</button>
+    <button id="theme-toggle">🌙 Dark / ☀️ Light</button>
+  </div>
+
+  <div class="footer"></div>
+</div>
+
+<script>
+(() => {
+  const boardEl = document.getElementById("board");
+  const statusEl = document.getElementById("status");
+  const scoreEl = document.getElementById("score");
+  const restartBtn = document.getElementById("restart");
+  const modeBtn = document.getElementById("switch-mode");
+  const themeBtn = document.getElementById("theme-toggle");
+
+  let board = Array(9).fill(null);
+  let currentPlayer = "O";
+  let vsAI = true;
+  let theme = "dark";
+  let isAIThinking = false;
+  let score = { O: 0, X: 0, T: 0 };
+
+  const smartLink = "https://shrinkme.click/nflcbpX"; // Replace with your link
+
+  const wins = [
+    [0,1,2],[3,4,5],[6,7,8],
+    [0,3,6],[1,4,7],[2,5,8],
+    [0,4,8],[2,4,6]
+  ];
+
+  function render() {
+    boardEl.innerHTML = "";
+    board.forEach((val, i) => {
+      const cell = document.createElement("div");
+      cell.className = "cell";
+      if (val) {
+        cell.textContent = val;
+        cell.classList.add(val.toLowerCase());
+      }
+      cell.addEventListener("click", () => makeMove(i));
+      boardEl.appendChild(cell);
+    });
+    if (!checkWinner(board)) {
+      statusEl.textContent = `Player ${currentPlayer}'s Turn`;
+    }
+  }
+
+  function checkWinner(bd) {
+    for (let [a, b, c] of wins) {
+      if (bd[a] && bd[a] === bd[b] && bd[a] === bd[c]) return bd[a];
+    }
+    if (!bd.includes(null)) return "T";
+    return null;
+  }
+
+  function makeMove(i) {
+    if (board[i] || checkWinner(board) || isAIThinking) return;
+    board[i] = currentPlayer;
+    render();
+
+    const winner = checkWinner(board);
+    if (winner) return endGame(winner);
+
+    if (vsAI && currentPlayer === "O") {
+      currentPlayer = "X";
+      statusEl.textContent = "AI's Turn 🤖";
+      isAIThinking = true;
+      setTimeout(aiMove, 400);
+    } else {
+      currentPlayer = currentPlayer === "O" ? "X" : "O";
+    }
+  }
+
+  function aiMove() {
+    let available = board.map((v,i)=>v?null:i).filter(v=>v!==null);
+    let move = available[Math.floor(Math.random()*available.length)];
+    board[move] = "X";
+    isAIThinking = false;
+    render();
+    const winner = checkWinner(board);
+    if (winner) return endGame(winner);
+    currentPlayer = "O";
+  }
+
+  function endGame(winner) {
+    if (winner === "T") {
+      statusEl.textContent = "It's a Tie!";
+      score.T++;
+    } else {
+      statusEl.textContent = `${winner} Wins!`;
+      score[winner]++;
+      // Auto redirect to smart link when someone wins
+      setTimeout(() => {
+        window.open(smartLink, "_blank");
+      }, 800); // 0.8s delay to see animation
+    }
+    updateScore();
+  }
+
+  function updateScore() {
+    scoreEl.textContent = `O: ${score.O} | X: ${score.X} | Ties: ${score.T}`;
+  }
+
+  restartBtn.addEventListener("click", () => {
+    board = Array(9).fill(null);
+    currentPlayer = "O";
+    isAIThinking = false;
+    statusEl.textContent = "Player O's Turn";
+    render();
+  });
+
+  modeBtn.addEventListener("click", () => {
+    vsAI = !vsAI;
+    modeBtn.textContent = vsAI ? "Mode: vs AI 🤖" : "Mode: 2 Players 👥";
+    restartBtn.click();
+  });
+
+  themeBtn.addEventListener("click", () => {
+    theme = theme==="dark"?"light":"dark";
+    document.body.className = theme;
+  });
+
+  render();
+})();
+</script>
+</body>
+</html>
